@@ -13,6 +13,7 @@ class AuthController {
     try {
       const createUserDto: CreateUserDto = req.body;
       const user = await this.authService.registerUser(createUserDto);
+      res.cookie('id', user.id)
       res.status(201).json(user);
     } catch (err) {
       res.status(500).json({ message: 'Error registering user' });
