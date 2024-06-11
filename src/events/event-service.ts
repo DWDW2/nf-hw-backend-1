@@ -1,57 +1,43 @@
 import { CreateEventDto } from './dtos/CreateEvent.dot';
-import { Event } from './types/response';
+import { IEvent, Event } from './models/Event';
 
 
-
-// this event service instance shows how to create a event, get a event by id, and get all events with in-memory data
 class EventService {
-    eventsInDatabase: Event[] = [
-    {
-        id: 1,
-        name:"Art Fair",
-        description: "Explore the latest works from local and international artists",
-        date: new Date(),
-        location:"Almaty, KBTU",
-        duration:"10:00 AM - 6:00PM"
-    },
-    {
-        id: 2,
-        name:"Backend Lecture",
-        description: "",
-        date: new Date("2024-06-11"),
-        location:"Almaty, Satbayev University",
-        duration:"9:15 AM - 11:15AM"
-    },
-      {
-        id: 3,
-        name:"Demo Day",
-        description:"",
-        date: new Date("2024-08-09"),
-        location:"Almaty, Satbayev University",
-        duration:"9:00 AM - 12:00 PM"
-      },
-    ];
-  
-    getEventById(id: number): Event | null {
-      return this.eventsInDatabase.find((user) => user.id === id) || null;
+       async getEventById(id: string): Promise<IEvent | null> {
+        try {
+            return await Event.findById(id).exec();
+        } catch (error) {
+            console.error('Error fetching event by ID', error);
+            return null;
+        }
     }
-    getEvents(): Event[] {
-      return this.eventsInDatabase;
+
+    async getEvents(sortBy: string = 'date', sortOrder: 'asc' | 'desc' = 'asc', page: number = 1, limit: number = 10): Promise<IEvent[]> {
+        try {
+            const skip = (page - 1) * limit;
+            const sortOptions: any = { [sortBy]: sortOrder === 'asc'? 1 : -1 };
+            return await Event.find().sort(sortOptions).skip(skip).limit(limit).exec();
+        } catch (error) {
+            console.error('Error fetching events', error);
+            return [];
+        }
     }
-  
-    createEvent(userDto: CreateEventDto): Event {
-        const newEvent: Event = {
-            id: 4,
-            name: userDto.name,
-            description: userDto.description,
-            date: new Date(userDto.date),
-            location: userDto.location,
-            duration: userDto.duration,
-    };
-        this.eventsInDatabase.push(newEvent);
-        return newEvent;
+
+    async createEvent(eventDto: CreateEventDto): Promise<IEvent> {
+        try {
+            const newEvent = new Event({
+                name: eventDto.name,
+                description: eventDto.description,
+                date: new Date(eventDto.date),
+                location: eventDto.location,
+                duration: eventDto.duration,
+            });
+            return await newEvent.save();
+        } catch (error) {
+            console.error('Error creating event', error);
+            throw new Error('Failed to create event');
+        }
     }
-  }
-  
-  export default EventService;
-  
+}
+
+export default EventService;

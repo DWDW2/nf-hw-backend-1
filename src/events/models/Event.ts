@@ -1,7 +1,7 @@
-import mongoose, {Document, Schema} from "mongoose";
+// models/Event.ts
+import mongoose, { Document, Schema } from 'mongoose';
 
-export interface IEvent {
-    id: number;
+export interface IEvent extends Document {
     name: string;
     description: string;
     date: Date;
@@ -10,14 +10,11 @@ export interface IEvent {
 }
 
 const EventSchema: Schema = new Schema({
-    id: { type: Number, required: true, unique: true },
     name: { type: String, required: true },
-    description: { type: String, default: "" },
+    description: { type: String },
     date: { type: Date, required: true },
     location: { type: String, required: true },
-    duration: { type: String, required: true },
+    duration: { type: String, required: true }
 });
 
-const Event = mongoose.model<IEvent>('Event', EventSchema);
-
-export default Event;
+export const Event = mongoose.model<IEvent>('Event', EventSchema);
