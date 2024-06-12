@@ -2,10 +2,11 @@ import { CreateEventDto } from './dtos/CreateEvent.dot';
 import { IEvent, Event } from './models/Event';
 
 
+
 class EventService {
        async getEventById(id: string): Promise<IEvent | null> {
         try {
-            return await Event.findById(id).exec();
+            return await Event.findOne({id:id}).exec();
         } catch (error) {
             console.error('Error fetching event by ID', error);
             return null;
