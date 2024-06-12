@@ -1,5 +1,5 @@
 // models/Event.ts
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Collection, Document, Schema } from 'mongoose';
 
 export interface IEvent extends Document {
     name: string;
@@ -15,6 +15,6 @@ const EventSchema: Schema = new Schema({
     date: { type: Date, required: true },
     location: { type: String, required: true },
     duration: { type: String, required: true }
-});
+}, {collection: 'events'});
 
 export const Event = mongoose.model<IEvent>('Event', EventSchema);

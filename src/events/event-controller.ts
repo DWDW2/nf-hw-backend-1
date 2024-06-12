@@ -2,8 +2,21 @@ import { Request, Response, NextFunction } from 'express';
 import { CreateEventDto } from './dtos/CreateEvent.dot';
 import EventService from './event-service';
 import User from '../auth/models/User';
-import {Event} from './models/Event';
+import { Event } from './models/Event';
+import AuthService from '../auth/auth-service';
+const mongoose = require('mongoose');
+const { ObjectId } = mongoose.Types;
 
+
+const authService = new AuthService();
+
+const parseJwt = (token) => {
+    try {
+      return JSON.parse(atob(token.split('.')[1]));
+    } catch (e) {
+      return null;
+    }
+  };
 
 class EventController {
     private eventService: EventService;
@@ -46,24 +59,34 @@ class EventController {
         }
     }
 
-    getEventsProtected = async (req: Request, res: Response, next: NextFunction) => {
-        const userId = req.cookies.userId;
+    getEventsProtected = async (req: Request, res: Response) => {
+        const accessToken = req.cookies.accessToken;
 
-        if (!userId) {
-            return res.status(400).json({ message: 'User ID header missing' });
+        if (!accessToken) {
+            return res.status(400).json({ message: 'Access token missing' });
         }
 
         try {
-            const user = await User.findById(userId);
+            console.log(parseJwt(accessToken));
+            
+            const decodedToken = parseJwt(accessToken)
 
+            if (!decodedToken) {
+                return res.status(401).json({ message: 'Invalid access token' });
+            }
+
+            const userId = decodedToken.id;
+            const user = await User.findOne({_id: new ObjectId(userId)});
+            console.log(user)
             if (!user) {
                 return res.status(404).json({ message: 'User not found' });
             }
-            interface query{
-                page:number;
-                limit:number;
-                sortBy:string;
-                sortOrder:string;
+
+            interface query {
+                page: number;
+                limit: number;
+                sortBy: string;
+                sortOrder: string;
             }
 
             const { page = 1, limit = 10, sortBy = 'date', sortOrder = 'asc' } = req.query;
@@ -76,8 +99,7 @@ class EventController {
                 .exec();
 
             (req as any).events = events;
-
-            next();
+            res.json(events);
         } catch (error) {
             return res.status(500).json({ message: 'Internal server error' });
         }

@@ -3,9 +3,9 @@ import { CreateUserDto } from './dtos/CreateUser.dto';
 import AuthService from './auth-service';
 
 class AuthController {
-  private authService: AuthService;
+  private authService:  AuthService;
 
-  constructor(authService: AuthService) {
+  constructor(authService:  AuthService) {
     this.authService = authService;
   }
 
@@ -13,7 +13,6 @@ class AuthController {
     try {
       const createUserDto: CreateUserDto = req.body;
       const user = await this.authService.registerUser(createUserDto);
-      res.cookie('id', user.id)
       res.status(201).json(user);
     } catch (err) {
       res.status(500).json({ message: 'Error registering user' });
@@ -24,10 +23,14 @@ class AuthController {
     try {
       const { email, password } = req.body;
       const result = await this.authService.loginUser(email, password);
+      
       if (!result) {
         res.status(401).json({ message: 'Invalid email or password' });
         return;
       }
+      
+      // Set authorization header in response
+      res.cookie('accessToken', result.accessToken);
       res.status(200).json(result);
     } catch (err) {
       res.status(500).json({ message: 'Error logging in' });
@@ -38,6 +41,9 @@ class AuthController {
     try {
       const { token } = req.body;
       const result = await this.authService.refreshToken(token);
+      if(result){
+        res.cookie('Authorization', `Bearer ${result.accessToken}`);
+      }
       if (!result) {
         res.status(401).json({ message: 'Invalid or expired refresh token' });
         return;
